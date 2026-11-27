@@ -19,6 +19,7 @@ services:
     build:
       context: .
       dockerfile: deploy/Dockerfile.api
+    image: lucky-api:latest
     restart: unless-stopped
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://dlt:dlt@db:5432/dlt}
@@ -39,9 +40,7 @@ services:
       retries: 12
 
   worker:
-    build:
-      context: .
-      dockerfile: deploy/Dockerfile.api
+    image: lucky-api:latest
     restart: unless-stopped
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://dlt:dlt@db:5432/dlt}
