@@ -39,8 +39,10 @@ export function Pagination({
     <div className="flex flex-wrap items-center justify-end gap-3 text-sm text-slate-500">
       <PageSizeSelect value={pageSize} onChange={onPageSizeChange} options={pageSizeOptions} />
       <span>共 {totalPages} 页</span>
+      <button className="btn-ghost" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
+        上一页
+      </button>
       <label className="flex items-center gap-1">
-        跳至
         <input
           className="w-14 rounded-lg border border-slate-300 px-2 py-1 text-center text-sm text-slate-700"
           inputMode="numeric"
@@ -57,9 +59,6 @@ export function Pagination({
         />
         页
       </label>
-      <button className="btn-ghost" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
-        上一页
-      </button>
       <button
         className="btn-ghost"
         disabled={page >= totalPages}
