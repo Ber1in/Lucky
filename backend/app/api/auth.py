@@ -5,10 +5,10 @@ from sqlalchemy.orm import Session
 
 from ..config import settings
 from ..db import get_db
-from ..deps import client_key, get_current_user
+from ..deps import bearer_token, client_key, get_current_user
 from ..models import User
 from ..ratelimit import SlidingWindowLimiter
-from ..schemas import LoginIn, RegisterIn, UserOut
+from ..schemas import LoginIn, RegisterIn, TokenOut, UserOut
 from ..security import hash_password, verify_password
 from ..services.auth import create_session, revoke_session
 
@@ -35,6 +35,29 @@ def _set_session_cookie(response: Response, token: str) -> None:
     )
 
 
+def _authenticate(db: Session, request: Request, username: str, password: str) -> User:
+    ip = client_key(request)
+    limiter_key = f"login:{ip}:{username}"
+    ip_key = f"login-ip:{ip}"
+    if login_limiter.blocked(limiter_key) or login_ip_limiter.blocked(ip_key):
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="尝试过于频繁")
+
+    def record_failure() -> None:
+        login_limiter.record(limiter_key)
+        login_ip_limiter.record(ip_key)
+
+    user = db.query(User).filter(User.username == username).first()
+    if user is None:
+        verify_password(DUMMY_HASH, password)
+        record_failure()
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户名或密码错误")
+    if not verify_password(user.password_hash, password):
+        record_failure()
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户名或密码错误")
+    login_limiter.clear_key(limiter_key)
+    return user
+
+
 @router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 def register(payload: RegisterIn, request: Request, response: Response, db: Session = Depends(get_db)):
     if not register_limiter.hit(f"register:{client_key(request)}"):
@@ -53,33 +76,22 @@ def register(payload: RegisterIn, request: Request, response: Response, db: Sess
 
 @router.post("/login", response_model=UserOut)
 def login(payload: LoginIn, request: Request, response: Response, db: Session = Depends(get_db)):
-    ip = client_key(request)
-    limiter_key = f"login:{ip}:{payload.username}"
-    ip_key = f"login-ip:{ip}"
-    if login_limiter.blocked(limiter_key) or login_ip_limiter.blocked(ip_key):
-        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="尝试过于频繁")
-
-    def record_failure() -> None:
-        login_limiter.record(limiter_key)
-        login_ip_limiter.record(ip_key)
-
-    user = db.query(User).filter(User.username == payload.username).first()
-    if user is None:
-        verify_password(DUMMY_HASH, payload.password)
-        record_failure()
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户名或密码错误")
-    if not verify_password(user.password_hash, payload.password):
-        record_failure()
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户名或密码错误")
-    login_limiter.clear_key(limiter_key)
+    user = _authenticate(db, request, payload.username, payload.password)
     token = create_session(db, user)
     _set_session_cookie(response, token)
     return user
 
 
+@router.post("/token", response_model=TokenOut)
+def token_login(payload: LoginIn, request: Request, db: Session = Depends(get_db)):
+    user = _authenticate(db, request, payload.username, payload.password)
+    token = create_session(db, user)
+    return TokenOut(token=token, user=UserOut.model_validate(user))
+
+
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 def logout(request: Request, response: Response, db: Session = Depends(get_db)):
-    token = request.cookies.get(settings.cookie_name)
+    token = bearer_token(request) or request.cookies.get(settings.cookie_name)
     if token:
         revoke_session(db, token)
     response.delete_cookie(settings.cookie_name, path="/")

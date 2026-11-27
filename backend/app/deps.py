@@ -22,8 +22,16 @@ def client_key(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
+def bearer_token(request: Request) -> str | None:
+    header = request.headers.get("authorization", "")
+    if header.lower().startswith("bearer "):
+        value = header[7:].strip()
+        return value or None
+    return None
+
+
 def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
-    token = request.cookies.get(settings.cookie_name)
+    token = bearer_token(request) or request.cookies.get(settings.cookie_name)
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="未登录")
     session = (

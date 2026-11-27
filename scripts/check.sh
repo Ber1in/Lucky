@@ -7,3 +7,6 @@ PYTHONPATH=backend python3 -m pytest backend -q
 
 echo "== frontend build =="
 npm --prefix frontend run build
+
+echo "== mobile typecheck =="
+npm --prefix mobile run typecheck

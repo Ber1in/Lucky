@@ -23,6 +23,11 @@ class UserOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class TokenOut(BaseModel):
+    token: str
+    user: UserOut
+
+
 class DrawPrizeOut(BaseModel):
     prize_level: str
     stake_amount: float | None

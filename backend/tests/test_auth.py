@@ -50,6 +50,39 @@ def test_login_success(client, register):
     assert response.json()["username"] == "alice"
 
 
+def test_token_login_and_bearer_auth(client, register):
+    register("alice")
+    client.post("/api/auth/logout")
+
+    response = client.post(
+        "/api/auth/token", json={"username": "alice", "password": "password123"}
+    )
+    assert response.status_code == 200
+    token = response.json()["token"]
+
+    me = client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
+    assert me.status_code == 200
+    assert me.json()["username"] == "alice"
+
+    logout = client.post(
+        "/api/auth/logout", headers={"Authorization": f"Bearer {token}"}
+    )
+    assert logout.status_code == 204
+    assert (
+        client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"}).status_code
+        == 401
+    )
+
+
+def test_token_login_wrong_password(client, register):
+    register("alice")
+    client.post("/api/auth/logout")
+    response = client.post(
+        "/api/auth/token", json={"username": "alice", "password": "wrongpass"}
+    )
+    assert response.status_code == 401
+
+
 def test_logout_invalidates_session(client, register):
     register("alice")
     assert client.get("/api/auth/me").status_code == 200
