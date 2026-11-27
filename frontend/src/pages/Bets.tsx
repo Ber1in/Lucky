@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { api, type Bet } from "../api";
 import { useAuth } from "../auth";
 import { Balls } from "../components/Balls";
-import { PageSizeSelect } from "../components/PageSizeSelect";
+import { Pagination } from "../components/Pagination";
 import { formatMoney } from "./Home";
 
 function statusLabel(bet: Bet) {
@@ -438,29 +438,17 @@ export function Bets() {
         </table>
       </section>
 
-      <div className="flex flex-wrap items-center justify-end gap-3">
-        <PageSizeSelect
-          value={pageSize}
-          options={[5, 10, 15, 30, 50]}
-          onChange={(size) => {
-            setPageSize(size);
-            setPage(1);
-          }}
-        />
-        <button className="btn-ghost" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-          上一页
-        </button>
-        <span className="text-sm text-slate-500">
-          第 {page} / {totalPages} 页
-        </span>
-        <button
-          className="btn-ghost"
-          disabled={page >= totalPages}
-          onClick={() => setPage((p) => p + 1)}
-        >
-          下一页
-        </button>
-      </div>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        pageSize={pageSize}
+        pageSizeOptions={[5, 10, 15, 30, 50]}
+        onPageChange={setPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setPage(1);
+        }}
+      />
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import { Balls } from "../components/Balls";
-import { PageSizeSelect } from "../components/PageSizeSelect";
+import { Pagination } from "../components/Pagination";
 
 export function History() {
   const [page, setPage] = useState(1);
@@ -62,28 +62,16 @@ export function History() {
         </table>
       </div>
 
-      <div className="flex flex-wrap items-center justify-end gap-3">
-        <PageSizeSelect
-          value={pageSize}
-          onChange={(size) => {
-            setPageSize(size);
-            setPage(1);
-          }}
-        />
-        <button className="btn-ghost" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-          上一页
-        </button>
-        <span className="text-sm text-slate-500">
-          第 {page} / {totalPages} 页
-        </span>
-        <button
-          className="btn-ghost"
-          disabled={page >= totalPages}
-          onClick={() => setPage((p) => p + 1)}
-        >
-          下一页
-        </button>
-      </div>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setPage(1);
+        }}
+      />
     </div>
   );
 }
