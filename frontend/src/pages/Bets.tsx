@@ -72,6 +72,7 @@ export function Bets() {
   const [multiplier, setMultiplier] = useState(1);
   const [ticketAmount, setTicketAmount] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
@@ -145,6 +146,12 @@ export function Bets() {
     setMultiplier(1);
     setTicketAmount("");
     setEditingId(null);
+    setShowForm(false);
+  };
+
+  const openCreate = () => {
+    resetForm();
+    setShowForm(true);
   };
 
   const submit = async () => {
@@ -207,6 +214,7 @@ export function Bets() {
   };
 
   const startEdit = (bet: Bet) => {
+    setShowForm(true);
     setEditingId(bet.id);
     setDrawNo(bet.draw_no);
     setFront([...bet.front_numbers]);
@@ -231,7 +239,14 @@ export function Bets() {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-lg font-semibold">我的投注</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-lg font-semibold">我的投注</h1>
+        {!showForm && (
+          <button className="btn-primary" onClick={openCreate}>
+            记录投注
+          </button>
+        )}
+      </div>
 
       {summary.data && (
         <section className="grid gap-4 sm:grid-cols-4">
@@ -262,14 +277,13 @@ export function Bets() {
         </section>
       )}
 
+      {(showForm || editingId !== null) && (
       <section className="card space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold">{editingId ? "修改投注" : "录入投注"}</h2>
-          {editingId && (
-            <button className="text-sm text-slate-500 hover:text-brand-600" onClick={resetForm}>
-              取消修改
-            </button>
-          )}
+          <h2 className="text-base font-semibold">{editingId ? "修改投注" : "记录投注"}</h2>
+          <button className="text-sm text-slate-500 hover:text-brand-600" onClick={resetForm}>
+            {editingId ? "取消修改" : "取消"}
+          </button>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
@@ -357,6 +371,7 @@ export function Bets() {
           仅支持 26014 期及以后；期号留空时自动使用下一期（尚未开奖），开奖后自动核算。
         </p>
       </section>
+      )}
 
       <section className="card overflow-x-auto p-0">
         <table className="min-w-full text-sm">
