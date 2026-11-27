@@ -4,9 +4,8 @@ import { Link } from "react-router-dom";
 import { api, type Bet } from "../api";
 import { useAuth } from "../auth";
 import { Balls } from "../components/Balls";
+import { PageSizeSelect } from "../components/PageSizeSelect";
 import { formatMoney } from "./Home";
-
-const PAGE_SIZE = 20;
 
 function statusLabel(bet: Bet) {
   if (bet.status === "pending") return "待开奖";
@@ -65,6 +64,7 @@ export function Bets() {
   const queryClient = useQueryClient();
 
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [drawNo, setDrawNo] = useState("");
   const [front, setFront] = useState<number[]>([]);
   const [back, setBack] = useState<number[]>([]);
@@ -77,8 +77,8 @@ export function Bets() {
   const [notice, setNotice] = useState("");
 
   const bets = useQuery({
-    queryKey: ["bets", page],
-    queryFn: () => api.bets(page, PAGE_SIZE),
+    queryKey: ["bets", page, pageSize],
+    queryFn: () => api.bets(page, pageSize),
     enabled: !!user,
   });
   const summary = useQuery({ queryKey: ["summary"], queryFn: api.summary, enabled: !!user });
@@ -119,7 +119,7 @@ export function Bets() {
     );
   }
 
-  const totalPages = bets.data ? Math.max(1, Math.ceil(bets.data.total / PAGE_SIZE)) : 1;
+  const totalPages = bets.data ? Math.max(1, Math.ceil(bets.data.total / pageSize)) : 1;
   const costPreview = (additional ? 3 : 2) * multiplier;
 
   const toggleFront = (value: number) => {
@@ -438,7 +438,14 @@ export function Bets() {
         </table>
       </section>
 
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex flex-wrap items-center justify-end gap-3">
+        <PageSizeSelect
+          value={pageSize}
+          onChange={(size) => {
+            setPageSize(size);
+            setPage(1);
+          }}
+        />
         <button className="btn-ghost" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
           上一页
         </button>

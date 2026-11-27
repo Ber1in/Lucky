@@ -3,21 +3,34 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import { Balls } from "../components/Balls";
-
-const PAGE_SIZE = 20;
+import { PageSizeSelect } from "../components/PageSizeSelect";
 
 export function History() {
   const [page, setPage] = useState(1);
-  const query = useQuery({ queryKey: ["draws", page], queryFn: () => api.draws(page, PAGE_SIZE) });
-  const totalPages = query.data ? Math.max(1, Math.ceil(query.data.total / PAGE_SIZE)) : 1;
+  const [pageSize, setPageSize] = useState(20);
+  const query = useQuery({
+    queryKey: ["draws", page, pageSize],
+    queryFn: () => api.draws(page, pageSize),
+  });
+  const totalPages = query.data ? Math.max(1, Math.ceil(query.data.total / pageSize)) : 1;
 
   return (
     <div className="space-y-4">
-      <div className="flex items-baseline justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-lg font-semibold">历史开奖</h1>
-        <span className="text-sm text-slate-500">
-          共 {query.data?.total ?? 0} 期 · 第 {page} / {totalPages} 页
-        </span>
+        <div className="flex items-center gap-3 text-sm text-slate-500">
+          <span>共 {query.data?.total ?? 0} 期</span>
+          <PageSizeSelect
+            value={pageSize}
+            onChange={(size) => {
+              setPageSize(size);
+              setPage(1);
+            }}
+          />
+          <span>
+            第 {page} / {totalPages} 页
+          </span>
+        </div>
       </div>
 
       <div className="card overflow-x-auto p-0">
