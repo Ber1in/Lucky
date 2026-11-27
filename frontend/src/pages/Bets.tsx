@@ -441,6 +441,7 @@ export function Bets() {
       <div className="flex flex-wrap items-center justify-end gap-3">
         <PageSizeSelect
           value={pageSize}
+          options={[5, 10, 15, 30, 50]}
           onChange={(size) => {
             setPageSize(size);
             setPage(1);

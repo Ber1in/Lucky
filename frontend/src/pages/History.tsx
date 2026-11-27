@@ -18,19 +18,7 @@ export function History() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-lg font-semibold">历史开奖</h1>
-        <div className="flex items-center gap-3 text-sm text-slate-500">
-          <span>共 {query.data?.total ?? 0} 期</span>
-          <PageSizeSelect
-            value={pageSize}
-            onChange={(size) => {
-              setPageSize(size);
-              setPage(1);
-            }}
-          />
-          <span>
-            第 {page} / {totalPages} 页
-          </span>
-        </div>
+        <span className="text-sm text-slate-500">共 {query.data?.total ?? 0} 期</span>
       </div>
 
       <div className="card overflow-x-auto p-0">
@@ -74,10 +62,20 @@ export function History() {
         </table>
       </div>
 
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex flex-wrap items-center justify-end gap-3">
+        <PageSizeSelect
+          value={pageSize}
+          onChange={(size) => {
+            setPageSize(size);
+            setPage(1);
+          }}
+        />
         <button className="btn-ghost" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
           上一页
         </button>
+        <span className="text-sm text-slate-500">
+          第 {page} / {totalPages} 页
+        </span>
         <button
           className="btn-ghost"
           disabled={page >= totalPages}
