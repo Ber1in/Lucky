@@ -127,7 +127,10 @@ export const api = {
   draws: (page = 1, pageSize = 20) =>
     request<DrawList>(`/draws?page=${page}&pageSize=${pageSize}`),
   draw: (drawNo: string) => request<Draw>(`/draws/${drawNo}`),
-  insights: (window: string) => request<Insights>(`/insights/numbers?window=${window}`),
+  insights: (window: string, includeNine = false, includeSix = false) =>
+    request<Insights>(
+      `/insights/numbers?window=${window}&include_nine_tier=${includeNine}&include_six_tier=${includeSix}`,
+    ),
   bets: (page = 1, pageSize = 20) =>
     request<BetList>(`/bets?page=${page}&pageSize=${pageSize}`, undefined, { protected: true }),
   summary: () => request<Summary>("/bets/summary", undefined, { protected: true }),

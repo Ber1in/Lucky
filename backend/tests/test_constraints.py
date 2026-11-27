@@ -22,7 +22,7 @@ def _bet_payload(**overrides):
 @pytest.mark.parametrize(
     "overrides",
     [
-        {"multiplier": 1},
+        {"multiplier": 0},
         {"multiplier": 100},
         {"draw_no": "26_136"},
         {"draw_no": "2613"},
@@ -52,7 +52,7 @@ def test_db_check_rejects_invalid_multiplier(db, make_draw):
             front_numbers=[1, 2, 3, 4, 5],
             back_numbers=[1, 2],
             is_additional=False,
-            multiplier=1,
+            multiplier=0,
             cost=2,
             status="pending",
         )

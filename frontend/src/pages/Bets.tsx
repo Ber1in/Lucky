@@ -8,14 +8,56 @@ import { formatMoney } from "./Home";
 
 const PAGE_SIZE = 20;
 
-function emptyFront() {
-  return ["", "", "", "", ""];
-}
-
 function statusLabel(bet: Bet) {
   if (bet.status === "pending") return "待开奖";
   if (bet.status === "won") return `中奖 · ${bet.prize_level ?? ""}`;
   return "未中奖";
+}
+
+function NumberGrid({
+  max,
+  selected,
+  onToggle,
+  color,
+}: {
+  max: number;
+  selected: number[];
+  onToggle: (value: number) => void;
+  color: "front" | "back";
+}) {
+  const total = color === "front" ? 35 : 12;
+  return (
+    <div
+      data-testid={`${color}-grid`}
+      className={`grid gap-2 ${
+        color === "front" ? "grid-cols-7 sm:grid-cols-9" : "grid-cols-6 sm:grid-cols-12"
+      }`}
+    >
+      {Array.from({ length: total }, (_, index) => index + 1).map((value) => {
+        const isSelected = selected.includes(value);
+        const disabled = !isSelected && selected.length >= max;
+        return (
+          <button
+            type="button"
+            key={value}
+            disabled={disabled}
+            onClick={() => onToggle(value)}
+            className={`h-9 rounded-full text-sm font-semibold transition ${
+              isSelected
+                ? color === "front"
+                  ? "bg-brand-600 text-white"
+                  : "bg-sky-600 text-white"
+                : disabled
+                  ? "bg-slate-100 text-slate-300"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+            }`}
+          >
+            {String(value).padStart(2, "0")}
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 export function Bets() {
@@ -24,10 +66,10 @@ export function Bets() {
 
   const [page, setPage] = useState(1);
   const [drawNo, setDrawNo] = useState("");
-  const [front, setFront] = useState<string[]>(emptyFront());
-  const [back, setBack] = useState<string[]>(["", ""]);
+  const [front, setFront] = useState<number[]>([]);
+  const [back, setBack] = useState<number[]>([]);
   const [additional, setAdditional] = useState(false);
-  const [multiplier, setMultiplier] = useState(2);
+  const [multiplier, setMultiplier] = useState(1);
   const [ticketAmount, setTicketAmount] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [error, setError] = useState("");
@@ -79,12 +121,28 @@ export function Bets() {
   const totalPages = bets.data ? Math.max(1, Math.ceil(bets.data.total / PAGE_SIZE)) : 1;
   const costPreview = (additional ? 3 : 2) * multiplier;
 
+  const toggleFront = (value: number) => {
+    if (front.includes(value)) {
+      setFront(front.filter((item) => item !== value));
+    } else if (front.length < 5) {
+      setFront([...front, value].sort((a, b) => a - b));
+    }
+  };
+
+  const toggleBack = (value: number) => {
+    if (back.includes(value)) {
+      setBack(back.filter((item) => item !== value));
+    } else if (back.length < 2) {
+      setBack([...back, value].sort((a, b) => a - b));
+    }
+  };
+
   const resetForm = () => {
     setDrawNo("");
-    setFront(emptyFront());
-    setBack(["", ""]);
+    setFront([]);
+    setBack([]);
     setAdditional(false);
-    setMultiplier(2);
+    setMultiplier(1);
     setTicketAmount("");
     setEditingId(null);
   };
@@ -97,28 +155,16 @@ export function Bets() {
       setError("期号必须为 5 位数字，或留空使用下一期");
       return;
     }
-    if (front.some((value) => !value) || back.some((value) => !value)) {
-      setError("请填写全部 7 个号码");
+    if (front.length !== 5) {
+      setError("前区请点选 5 个号码");
       return;
     }
-    const frontNumbers = front.map((value) => Number(value));
-    const backNumbers = back.map((value) => Number(value));
-    if (
-      frontNumbers.some((number) => !Number.isInteger(number) || number < 1 || number > 35) ||
-      new Set(frontNumbers).size !== 5
-    ) {
-      setError("前区必须为 5 个不重复的 01–35 号码");
+    if (back.length !== 2) {
+      setError("后区请点选 2 个号码");
       return;
     }
-    if (
-      backNumbers.some((number) => !Number.isInteger(number) || number < 1 || number > 12) ||
-      new Set(backNumbers).size !== 2
-    ) {
-      setError("后区必须为 2 个不重复的 01–12 号码");
-      return;
-    }
-    if (!Number.isInteger(multiplier) || multiplier < 2 || multiplier > 99) {
-      setError("倍数必须为 2–99 的整数");
+    if (!Number.isInteger(multiplier) || multiplier < 1 || multiplier > 99) {
+      setError("倍数必须为 1–99 的整数");
       return;
     }
     const parsedTicketAmount = ticketAmount ? Number(ticketAmount) : null;
@@ -134,8 +180,8 @@ export function Bets() {
     try {
       if (editingId !== null) {
         await api.updateBet(editingId, {
-          front_numbers: frontNumbers,
-          back_numbers: backNumbers,
+          front_numbers: front,
+          back_numbers: back,
           is_additional: additional,
           multiplier,
           ticket_amount: parsedTicketAmount,
@@ -144,8 +190,8 @@ export function Bets() {
       } else {
         await api.createBet({
           draw_no: effectiveDrawNo || null,
-          front_numbers: frontNumbers,
-          back_numbers: backNumbers,
+          front_numbers: front,
+          back_numbers: back,
           is_additional: additional,
           multiplier,
           ticket_amount: parsedTicketAmount,
@@ -163,8 +209,8 @@ export function Bets() {
   const startEdit = (bet: Bet) => {
     setEditingId(bet.id);
     setDrawNo(bet.draw_no);
-    setFront(bet.front_numbers.map((number) => String(number)));
-    setBack(bet.back_numbers.map((number) => String(number)));
+    setFront([...bet.front_numbers]);
+    setBack([...bet.back_numbers]);
     setAdditional(bet.is_additional);
     setMultiplier(bet.multiplier);
     setTicketAmount(bet.ticket_amount != null ? String(bet.ticket_amount) : "");
@@ -216,7 +262,7 @@ export function Bets() {
         </section>
       )}
 
-      <section className="card space-y-3">
+      <section className="card space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold">{editingId ? "修改投注" : "录入投注"}</h2>
           {editingId && (
@@ -249,11 +295,11 @@ export function Bets() {
             </div>
           </div>
           <div>
-            <label className="label">倍数（2–99）</label>
+            <label className="label">倍数（1–99）</label>
             <input
               className="input"
               type="number"
-              min={2}
+              min={1}
               max={99}
               value={multiplier}
               onChange={(event) => setMultiplier(Number(event.target.value))}
@@ -274,43 +320,19 @@ export function Bets() {
         </div>
 
         <div>
-          <label className="label">前区（01–35，5 个）</label>
-          <div className="flex flex-wrap gap-2">
-            {front.map((value, index) => (
-              <input
-                key={`front-${index}`}
-                className="input w-16 text-center"
-                inputMode="numeric"
-                value={value}
-                placeholder="--"
-                onChange={(event) => {
-                  const next = [...front];
-                  next[index] = event.target.value.replace(/\D/g, "").slice(0, 2);
-                  setFront(next);
-                }}
-              />
-            ))}
+          <div className="mb-2 flex items-center justify-between">
+            <label className="label mb-0">前区（点选 5 个）</label>
+            <span className="text-xs text-slate-400">{front.length} / 5</span>
           </div>
+          <NumberGrid max={5} selected={front} onToggle={toggleFront} color="front" />
         </div>
 
         <div>
-          <label className="label">后区（01–12，2 个）</label>
-          <div className="flex gap-2">
-            {back.map((value, index) => (
-              <input
-                key={`back-${index}`}
-                className="input w-16 text-center"
-                inputMode="numeric"
-                value={value}
-                placeholder="--"
-                onChange={(event) => {
-                  const next = [...back];
-                  next[index] = event.target.value.replace(/\D/g, "").slice(0, 2);
-                  setBack(next);
-                }}
-              />
-            ))}
+          <div className="mb-2 flex items-center justify-between">
+            <label className="label mb-0">后区（点选 2 个）</label>
+            <span className="text-xs text-slate-400">{back.length} / 2</span>
           </div>
+          <NumberGrid max={2} selected={back} onToggle={toggleBack} color="back" />
         </div>
 
         <div className="flex flex-wrap items-center gap-4 text-sm">

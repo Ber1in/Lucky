@@ -7,20 +7,39 @@ from sqlalchemy.orm import Session
 
 from ..models import Draw
 from ..schemas import InsightsOut, NumberStat
+from .prize_rules import stats_version
 
-VALID_WINDOWS = {"all", "last100", "last1y"}
-
-
-def draws_for_window(db: Session, window: str) -> list[Draw]:
-    query = db.query(Draw).order_by(Draw.draw_no.desc())
-    if window == "last100":
-        query = query.limit(100)
-    elif window == "last1y":
-        query = query.filter(Draw.draw_date >= date.today() - timedelta(days=365))
-    return query.all()
+WINDOW_DAYS = {"1m": 30, "3m": 90, "1y": 365, "3y": 1095}
+VALID_WINDOWS = set(WINDOW_DAYS)
 
 
-def _stats(numbers: range, counts: Counter, last_seen: dict[int, int], sample_size: int) -> list[NumberStat]:
+def draws_for_window(
+    db: Session,
+    window: str,
+    include_nine: bool = False,
+    include_six: bool = False,
+) -> list[Draw]:
+    cutoff = date.today() - timedelta(days=WINDOW_DAYS[window])
+    draws = (
+        db.query(Draw)
+        .filter(Draw.draw_date >= cutoff)
+        .order_by(Draw.draw_no.desc())
+        .all()
+    )
+    allowed = {"seven"}
+    if include_nine:
+        allowed.add("nine")
+    if include_six:
+        allowed.add("six")
+    return [draw for draw in draws if stats_version(draw.draw_no) in allowed]
+
+
+def _stats(
+    numbers: range,
+    counts: Counter,
+    last_seen: dict[int, int],
+    sample_size: int,
+) -> list[NumberStat]:
     rows = []
     for number in numbers:
         count = counts.get(number, 0)
@@ -36,8 +55,13 @@ def _stats(numbers: range, counts: Counter, last_seen: dict[int, int], sample_si
     return rows
 
 
-def compute_insights(db: Session, window: str) -> InsightsOut:
-    draws = draws_for_window(db, window)
+def compute_insights(
+    db: Session,
+    window: str,
+    include_nine: bool = False,
+    include_six: bool = False,
+) -> InsightsOut:
+    draws = draws_for_window(db, window, include_nine, include_six)
     sample_size = len(draws)
 
     front_counts: Counter = Counter()

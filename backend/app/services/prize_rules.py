@@ -35,6 +35,19 @@ def tier_for(front_hits: int, back_hits: int) -> str | None:
     return SEVEN_TIER_MAP.get((front_hits, back_hits))
 
 
+def stats_version(draw_no: str) -> str:
+    """Classify a draw for statistics: seven, nine, or six tier rules."""
+    try:
+        number = int(draw_no)
+    except (TypeError, ValueError):
+        return "seven"
+    if number >= settings.seven_tier_start_draw:
+        return "seven"
+    if number >= 19019:
+        return "nine"
+    return "six"
+
+
 def _as_int_set(values: list[int] | None) -> set[int]:
     return {int(v) for v in (values or [])}
 

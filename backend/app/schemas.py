@@ -70,7 +70,7 @@ class BetIn(BaseModel):
     front_numbers: list[int]
     back_numbers: list[int]
     is_additional: bool = False
-    multiplier: int = Field(ge=2, le=99)
+    multiplier: int = Field(ge=1, le=99)
     ticket_amount: float | None = Field(default=None, ge=0, le=30000)
 
     @field_validator("draw_no")
@@ -110,7 +110,7 @@ class BetUpdate(BaseModel):
     front_numbers: list[int] | None = None
     back_numbers: list[int] | None = None
     is_additional: bool | None = None
-    multiplier: int | None = Field(default=None, ge=2, le=99)
+    multiplier: int | None = Field(default=None, ge=1, le=99)
     ticket_amount: float | None = Field(default=None, ge=0, le=30000)
 
     @field_validator("front_numbers")

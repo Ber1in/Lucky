@@ -11,10 +11,15 @@ router = APIRouter(prefix="/api/insights", tags=["insights"])
 
 
 @router.get("/numbers", response_model=InsightsOut)
-def number_insights(window: str = Query(default="all"), db: Session = Depends(get_db)):
+def number_insights(
+    window: str = Query(default="1y"),
+    include_nine_tier: bool = Query(default=False),
+    include_six_tier: bool = Query(default=False),
+    db: Session = Depends(get_db),
+):
     if window not in VALID_WINDOWS:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="window 只能是 all、last100 或 last1y",
+            detail="window 只能是 1m、3m、1y 或 3y",
         )
-    return compute_insights(db, window)
+    return compute_insights(db, window, include_nine_tier, include_six_tier)

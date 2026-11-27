@@ -84,7 +84,7 @@ class DrawPrize(Base):
 class Bet(Base):
     __tablename__ = "bets"
     __table_args__ = (
-        CheckConstraint("multiplier >= 2 AND multiplier <= 99", name="ck_bets_multiplier"),
+        CheckConstraint("multiplier >= 1 AND multiplier <= 99", name="ck_bets_multiplier"),
         Index("ix_bets_user_draw", "user_id", "draw_no"),
     )
 
@@ -97,7 +97,7 @@ class Bet(Base):
     front_numbers: Mapped[list[int]] = mapped_column(JSON, nullable=False)
     back_numbers: Mapped[list[int]] = mapped_column(JSON, nullable=False)
     is_additional: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    multiplier: Mapped[int] = mapped_column(SmallInteger, default=2, nullable=False)
+    multiplier: Mapped[int] = mapped_column(SmallInteger, default=1, nullable=False)
     cost: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     # Ticket amount for one draw, used for bonus-prize eligibility; falls back to cost when null.
     ticket_amount: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)

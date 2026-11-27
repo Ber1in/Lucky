@@ -34,6 +34,14 @@ def test_create_winning_bet(client, register, make_draw):
     assert body["cost"] == 4
 
 
+def test_multiplier_one(client, register, make_draw):
+    register()
+    make_draw()
+    body = _bet(client, multiplier=1).json()
+    assert body["cost"] == 2
+    assert body["prize_amount"] == 1_000_000
+
+
 def test_additional_prize(client, register, make_draw):
     register()
     make_draw()
