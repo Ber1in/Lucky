@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import time
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 from sqlalchemy.orm import Session
@@ -154,6 +154,7 @@ def evaluate_pending_bets(db: Session) -> int:
 
 
 MAX_DRAWS_PER_YEAR = 156
+DRAW_WEEKDAYS = (0, 2, 5)  # Monday, Wednesday, Saturday
 
 
 def latest_draw_no(db: Session) -> str | None:
@@ -174,6 +175,15 @@ def next_draw_no(db: Session) -> str | None:
     if sequence >= MAX_DRAWS_PER_YEAR:
         return f"{(year + 1) % 100:02d}001"
     return f"{year:02d}{sequence + 1:03d}"
+
+
+def next_draw_date(latest_date: date) -> date:
+    """Return the next scheduled draw date after the latest drawn date."""
+    for offset in range(1, 8):
+        candidate = latest_date + timedelta(days=offset)
+        if candidate.weekday() in DRAW_WEEKDAYS:
+            return candidate
+    return latest_date + timedelta(days=1)
 
 
 def _is_newer(draw_no: str, local_max: str | None) -> bool:

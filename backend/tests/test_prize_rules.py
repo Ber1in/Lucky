@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from app.services.prize_rules import rule_version_for, stats_version, tier_for
+from app.services.sync import next_draw_date
 
 
 @pytest.mark.parametrize(
@@ -37,6 +40,13 @@ def test_rule_version_boundary():
     assert rule_version_for("26014") == "seven_tier"
     assert rule_version_for("26135") == "seven_tier"
     assert rule_version_for("abc") == "legacy"
+
+
+def test_next_draw_date():
+    assert next_draw_date(date(2026, 11, 25)) == date(2026, 11, 28)  # Wed -> Sat
+    assert next_draw_date(date(2026, 11, 28)) == date(2026, 11, 30)  # Sat -> Mon
+    assert next_draw_date(date(2026, 11, 29)) == date(2026, 11, 30)  # Sun -> Mon
+    assert next_draw_date(date(2026, 11, 30)) == date(2026, 12, 2)  # Mon -> Wed
 
 
 def test_stats_version_boundary():

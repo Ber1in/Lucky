@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from ..db import get_db
 from ..models import Draw
 from ..schemas import DrawListOut, DrawOut
-from ..services.sync import next_draw_no
+from ..services.sync import next_draw_date, next_draw_no
 
 router = APIRouter(prefix="/api/draws", tags=["draws"])
 
@@ -26,7 +26,8 @@ def next_draw(db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="暂无开奖数据，无法确定下一期"
         )
-    return {"draw_no": draw_no}
+    latest = db.query(Draw).order_by(Draw.draw_no.desc()).first()
+    return {"draw_no": draw_no, "draw_date": next_draw_date(latest.draw_date)}
 
 
 @router.get("", response_model=DrawListOut)

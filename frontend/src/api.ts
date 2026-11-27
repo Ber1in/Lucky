@@ -123,7 +123,7 @@ export const api = {
     }),
   logout: () => request<void>("/auth/logout", { method: "POST" }),
   latest: () => request<Draw>("/draws/latest"),
-  nextDraw: () => request<{ draw_no: string }>("/draws/next"),
+  nextDraw: () => request<{ draw_no: string; draw_date: string }>("/draws/next"),
   draws: (page = 1, pageSize = 20) =>
     request<DrawList>(`/draws?page=${page}&pageSize=${pageSize}`),
   draw: (drawNo: string) => request<Draw>(`/draws/${drawNo}`),

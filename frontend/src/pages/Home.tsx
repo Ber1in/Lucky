@@ -9,6 +9,11 @@ export function Home() {
   const latest = useQuery({ queryKey: ["latest"], queryFn: api.latest });
   const recent = useQuery({ queryKey: ["draws", 1, 5], queryFn: () => api.draws(1, 5) });
   const summary = useQuery({ queryKey: ["summary"], queryFn: api.summary, enabled: !!user });
+  const next = useQuery({
+    queryKey: ["next-draw"],
+    queryFn: api.nextDraw,
+    staleTime: 60_000,
+  });
 
   return (
     <div className="space-y-6">
@@ -36,9 +41,14 @@ export function Home() {
             </div>
             <Balls front={latest.data.front_numbers} back={latest.data.back_numbers} />
             <div className="flex flex-wrap gap-6 text-sm text-slate-500">
-              <span>奖池：{formatMoney(latest.data.pool_balance)}</span>
-              <span>本期销售：{formatMoney(latest.data.sales_amount)}</span>
+              <span>当前奖池（滚存至下期）：{formatMoney(latest.data.pool_balance)}</span>
+              <span>上期销售额（开奖后公布）：{formatMoney(latest.data.sales_amount)}</span>
             </div>
+            {next.data && (
+              <p className="text-sm text-slate-500">
+                下一期：{next.data.draw_no} · {formatDrawDate(next.data.draw_date)} 21:25 开奖
+              </p>
+            )}
           </div>
         )}
       </section>
@@ -94,4 +104,10 @@ export function Home() {
 export function formatMoney(value: number | null | undefined): string {
   if (value === null || value === undefined) return "—";
   return `¥${Number(value).toLocaleString("zh-CN", { maximumFractionDigits: 2 })}`;
+}
+
+function formatDrawDate(value: string): string {
+  const parts = value.split("-");
+  if (parts.length !== 3) return value;
+  return `${Number(parts[1])} 月 ${Number(parts[2])} 日`;
 }

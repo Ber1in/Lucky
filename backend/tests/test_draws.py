@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import date
+
 
 def test_latest_draw(client, make_draw):
     make_draw("26012")
@@ -38,10 +40,12 @@ def test_detail(client, make_draw):
 
 
 def test_next_draw(client, make_draw):
-    make_draw("26014")
+    make_draw("26014", draw_date=date(2026, 2, 2))
     response = client.get("/api/draws/next")
     assert response.status_code == 200
-    assert response.json()["draw_no"] == "26015"
+    body = response.json()
+    assert body["draw_no"] == "26015"
+    assert body["draw_date"] == "2026-02-04"
 
 
 def test_next_draw_year_rollover(client, make_draw):
