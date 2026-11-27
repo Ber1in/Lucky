@@ -3,3 +3,12 @@
 /.comet/*
 !/.comet/config.yaml
 # <<< Comet managed project state <<<
+
+# App artifacts
+node_modules/
+frontend/dist/
+__pycache__/
+*.pyc
+*.db
+backups/
+.env

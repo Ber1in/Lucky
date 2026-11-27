@@ -1,0 +1,9 @@
+{
+  "action": "push",
+  "targetBranch": "master",
+  "remote": "origin",
+  "schemaVersion": 1,
+  "changeIdentity": "run:0ff0832f-f72b-47cb-9661-80954bfc74d5",
+  "authorizationId": "ea6cc4bf-6c34-4c93-8b14-a643ba7934ec",
+  "authorizedRemoteUrl": "git@github.com:Ber1in/Lucky.git"
+}

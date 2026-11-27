@@ -1,8 +1,0 @@
-{
-  "openspec_proposal": "docs/openspec/changes/dlt-lottery-tracker/proposal.md",
-  "openspec_design": "docs/openspec/changes/dlt-lottery-tracker/design.md",
-  "openspec_tasks": "docs/openspec/changes/dlt-lottery-tracker/tasks.md",
-  "openspec_delta_spec": "docs/openspec/changes/dlt-lottery-tracker/specs/bet-tracking/spec.md",
-  "handoff_context": "docs/openspec/changes/dlt-lottery-tracker/.comet/handoff/design-context.json",
-  "handoff_markdown": "docs/openspec/changes/dlt-lottery-tracker/.comet/handoff/design-context.md"
-}

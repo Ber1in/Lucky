@@ -1,0 +1,19 @@
+{
+  "change": "dlt-lottery-tracker",
+  "phase": "design",
+  "mode": "compact",
+  "canonical_spec": "openspec",
+  "task_hash_policy": "task-content-v1",
+  "generated_by": "comet-handoff.sh",
+  "context_hash": "a391ecf8214eeb77696b731c93d1794a1a2f55a2e8c5c52a2e10dea7bb9aa66b",
+  "files": [
+    { "path": "docs/openspec/changes/dlt-lottery-tracker/proposal.md", "sha256": "7ccd3edccbd610de15940a794c66ae694bedc98c964084cf9690793df18b008d" },
+    { "path": "docs/openspec/changes/dlt-lottery-tracker/design.md", "sha256": "b076451f0e748069b899a421c6be482a38af6ca7edd88f401ec4e57f9a25c5fd" },
+    { "path": "docs/openspec/changes/dlt-lottery-tracker/tasks.md", "sha256": "6dfc54fafb9840901ef5f4d6ec1921ceeeb45970d81f56bdc39112427adca35a" },
+    { "path": "docs/openspec/changes/dlt-lottery-tracker/.openspec.yaml", "sha256": "d80b853b48e4aa975645172ad7ef5fa151e0123233d254d536f1f288336f6023" },
+    { "path": "docs/openspec/changes/dlt-lottery-tracker/specs/bet-tracking/spec.md", "sha256": "9df04402319febeef642d5a4d21cf954be14766a55100ded846be74ae42f3b71" },
+    { "path": "docs/openspec/changes/dlt-lottery-tracker/specs/draw-data/spec.md", "sha256": "005f77859e5d17aaa2dfc512b6edc66dc3b47522550645a146a655ecdd8cffaa" },
+    { "path": "docs/openspec/changes/dlt-lottery-tracker/specs/number-insights/spec.md", "sha256": "ac317e0a2d3127fd80e176f6b382610c172e5cc59af14cd89cfa3c1bfd443ec4" },
+    { "path": "docs/openspec/changes/dlt-lottery-tracker/specs/user-auth/spec.md", "sha256": "9beb10aaae4e2e01a11c349f3d75cb36da5a49c65fa2131bc18b02fa156ab435" }
+  ]
+}

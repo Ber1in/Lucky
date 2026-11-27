@@ -1,0 +1,18 @@
+== backend tests ==
+........................................................................ [ 82%]
+...............                                                          [100%]
+87 passed in 6.23s
+== frontend build ==
+
+> dlt-frontend@0.1.0 build
+> tsc --noEmit && vite build
+
+vite v5.4.21 building for production...
+transforming...
+✓ 90 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.39 kB │ gzip:  0.30 kB
+dist/assets/index-DB26gHJa.css   14.81 kB │ gzip:  3.21 kB
+dist/assets/index-B89-wxmr.js   231.48 kB │ gzip: 72.72 kB
+✓ built in 1.50s
