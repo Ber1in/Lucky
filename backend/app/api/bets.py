@@ -44,7 +44,11 @@ def list_bets(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    query = db.query(Bet).filter(Bet.user_id == user.id).order_by(Bet.id.desc())
+    query = (
+        db.query(Bet)
+        .filter(Bet.user_id == user.id)
+        .order_by(Bet.draw_no.desc(), Bet.id.desc())
+    )
     total = query.count()
     items = query.offset((page - 1) * pageSize).limit(pageSize).all()
     return BetListOut(

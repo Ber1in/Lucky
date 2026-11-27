@@ -212,6 +212,16 @@ def test_missing_draw_no_defaults_to_next(client, register, make_draw):
     assert body["status"] == "pending"
 
 
+def test_bets_sorted_by_draw_desc(client, register, make_draw):
+    register()
+    make_draw("26014")
+    make_draw("26015")
+    _bet(client, draw_no="26014")
+    _bet(client, draw_no="26015")
+    body = client.get("/api/bets").json()
+    assert [item["draw_no"] for item in body["items"]] == ["26015", "26014"]
+
+
 def test_user_isolation(client, register, make_draw):
     register("alice")
     make_draw()
