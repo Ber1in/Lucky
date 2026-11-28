@@ -104,7 +104,10 @@ export default function HomeScreen() {
 
       {user && summary ? (
         <View style={styles.summaryGrid}>
-          <SummaryCard label="已结算投入" value={formatMoney(summary.total_cost)} />
+          <SummaryCard
+            label="总投入"
+            value={formatMoney(summary.total_cost + summary.pending_cost)}
+          />
           <SummaryCard label="累计中奖" value={formatMoney(summary.total_prize)} />
           <SummaryCard
             label="净盈亏"

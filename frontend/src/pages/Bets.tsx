@@ -274,8 +274,10 @@ export function Bets() {
       {summary.data && (
         <section className="grid gap-4 sm:grid-cols-4">
           <div className="card">
-            <p className="text-sm text-slate-500">已结算投入</p>
-            <p className="mt-1 text-xl font-semibold">{formatMoney(summary.data.total_cost)}</p>
+            <p className="text-sm text-slate-500">总投入</p>
+            <p className="mt-1 text-xl font-semibold">
+              {formatMoney(summary.data.total_cost + summary.data.pending_cost)}
+            </p>
           </div>
           <div className="card">
             <p className="text-sm text-slate-500">累计中奖</p>

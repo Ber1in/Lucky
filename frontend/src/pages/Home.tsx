@@ -56,8 +56,10 @@ export function Home() {
       {user && summary.data && (
         <section className="grid gap-4 sm:grid-cols-3">
           <div className="card">
-            <p className="text-sm text-slate-500">已结算投入</p>
-            <p className="mt-1 text-2xl font-semibold">{formatMoney(summary.data.total_cost)}</p>
+            <p className="text-sm text-slate-500">总投入</p>
+            <p className="mt-1 text-2xl font-semibold">
+              {formatMoney(summary.data.total_cost + summary.data.pending_cost)}
+            </p>
           </div>
           <div className="card">
             <p className="text-sm text-slate-500">累计中奖</p>
