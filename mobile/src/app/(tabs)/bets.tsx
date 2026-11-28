@@ -291,7 +291,10 @@ export default function BetsScreen() {
             value={formatMoney(summary.net)}
             color={summary.net >= 0 ? colors.success : colors.danger}
           />
-          <SummaryCard label="待开奖" value={`${summary.pending_count} 注`} />
+          <SummaryCard
+            label="待开奖"
+            value={`${summary.pending_count} 注 · ${formatMoney(summary.pending_cost)}`}
+          />
         </View>
       ) : null}
 
@@ -321,29 +324,29 @@ export default function BetsScreen() {
                         <Text style={styles.muted}>{bet.draw_date ?? "待开奖"}</Text>
                       </View>
                     </View>
-                    <Text
-                      style={[
-                        styles.status,
-                        bet.status === "won"
-                          ? styles.won
-                          : bet.status === "pending"
-                            ? styles.pending
-                            : styles.muted,
-                      ]}
-                    >
-                      {statusLabel(bet.status, bet.prize_level)}
-                    </Text>
-                  </View>
-                  <Balls front={bet.front_numbers} back={bet.back_numbers} small />
-                  <View style={styles.rowBetween}>
-                    <Text style={styles.muted}>
+                    <Text style={[styles.muted, styles.betMeta]} numberOfLines={1}>
                       {bet.is_additional ? "追加" : "基本"} · {bet.multiplier} 倍 · 投入{" "}
                       {formatMoney(bet.cost)}
                     </Text>
-                    <Text style={styles.muted}>
-                      {bet.status === "won" ? formatMoney(bet.prize_amount) : "—"}
-                    </Text>
+                    <View style={styles.resultWrap}>
+                      <Text
+                        style={[
+                          styles.status,
+                          bet.status === "won"
+                            ? styles.won
+                            : bet.status === "pending"
+                              ? styles.pending
+                              : styles.muted,
+                        ]}
+                      >
+                        {statusLabel(bet.status, bet.prize_level)}
+                      </Text>
+                      {bet.status === "won" ? (
+                        <Text style={styles.prize}>{formatMoney(bet.prize_amount)}</Text>
+                      ) : null}
+                    </View>
                   </View>
+                  <Balls front={bet.front_numbers} back={bet.back_numbers} small />
                 </Card>
               </Pressable>
             );
@@ -592,6 +595,21 @@ const styles = StyleSheet.create({
   status: {
     fontSize: 13,
     fontWeight: "600",
+  },
+  betMeta: {
+    flex: 1,
+    marginHorizontal: 6,
+    fontSize: 11,
+    textAlign: "center",
+  },
+  resultWrap: {
+    alignItems: "flex-end",
+    gap: 2,
+  },
+  prize: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.success,
   },
   won: {
     color: colors.success,
