@@ -116,10 +116,10 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ username, password }),
     }),
-  register: (username: string, password: string) =>
+  register: (username: string, password: string, inviteCode?: string) =>
     request<User>("/auth/register", {
       method: "POST",
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ username, password, invite_code: inviteCode || null }),
     }),
   logout: () => request<void>("/auth/logout", { method: "POST" }),
   latest: () => request<Draw>("/draws/latest"),

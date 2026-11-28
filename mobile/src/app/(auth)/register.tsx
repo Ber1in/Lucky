@@ -18,6 +18,7 @@ export default function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -37,7 +38,7 @@ export default function Register() {
     }
     setBusy(true);
     try {
-      await signUp(username.trim(), password);
+      await signUp(username.trim(), password, inviteCode.trim());
       router.replace("/(tabs)");
     } catch (err) {
       setError(err instanceof Error ? err.message : "注册失败");
@@ -62,6 +63,13 @@ export default function Register() {
             autoCapitalize="none"
             autoCorrect={false}
             onChangeText={setUsername}
+          />
+          <Input
+            label="邀请码"
+            value={inviteCode}
+            autoCapitalize="none"
+            autoCorrect={false}
+            onChangeText={setInviteCode}
           />
           <Input label="密码" value={password} secureTextEntry onChangeText={setPassword} />
           <Input label="确认密码" value={confirm} secureTextEntry onChangeText={setConfirm} />

@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export const DEFAULT_BASE_URL = "http://192.168.5.14:18080";
+export const DEFAULT_BASE_URL = "https://47.108.230.103:8443";
 const STORAGE_KEY = "lucky.baseUrl";
 
 let currentBaseUrl = DEFAULT_BASE_URL;

@@ -27,6 +27,7 @@ class Settings:
 
     login_max_failures = int(os.environ.get("LOGIN_MAX_FAILURES", "10"))
     login_window_seconds = int(os.environ.get("LOGIN_WINDOW_SECONDS", "300"))
+    registration_invite_code = os.environ.get("REGISTRATION_INVITE_CODE", "")
 
 
 settings = Settings()

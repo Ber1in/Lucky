@@ -25,8 +25,11 @@ The app needs a development build for custom native config. For a release APK:
 export LUCKY_KEYSTORE=/root/.lucky-keystore/lucky-release.keystore
 export LUCKY_STORE_PASSWORD=<store password>
 export LUCKY_KEY_PASSWORD=<key password>
+export LUCKY_CA_CERT=/mnt/d/Downloads/lucky-ca.crt
 ./scripts/build-apk.sh
 ```
+
+The build bundles the self-signed CA so the app trusts `https://47.108.230.103:8443`.
 
 Output: `android/app/build/outputs/apk/release/app-release.apk`.
 

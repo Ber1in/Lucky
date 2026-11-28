@@ -16,7 +16,7 @@ type AuthState = {
   user: User | null;
   loading: boolean;
   signIn: (username: string, password: string) => Promise<void>;
-  signUp: (username: string, password: string) => Promise<void>;
+  signUp: (username: string, password: string, inviteCode?: string) => Promise<void>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
 };
@@ -60,8 +60,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(result.user);
   }, []);
 
-  const signUp = useCallback(async (username: string, password: string) => {
-    await api.register(username, password);
+  const signUp = useCallback(async (username: string, password: string, inviteCode?: string) => {
+    await api.register(username, password, inviteCode);
     const result = await api.tokenLogin(username, password);
     await setToken(result.token);
     setUser(result.user);

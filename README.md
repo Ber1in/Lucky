@@ -128,6 +128,18 @@ docker compose exec -T db psql -U "${POSTGRES_USER:-dlt}" -d "${POSTGRES_DB:-dlt
 
 建议用宿主机 cron 每天执行一次备份。
 
+## 云端部署（当前生产）
+
+当前线上环境是阿里云单机原生部署：
+
+- Nginx HTTPS `8443`（自签 CA），托管前端并把 `/api` 反代到 FastAPI
+- FastAPI 与 worker 由 systemd 管理
+- PostgreSQL 16
+- 注册需要邀请码（服务端环境变量 `REGISTRATION_INVITE_CODE`）
+- App 默认连接 `https://47.108.230.103:8443`
+
+自签 CA 在 `/mnt/d/Downloads/lucky-ca.crt`。PC 把它安装到“受信任的根证书颁发机构”后浏览器不再警告；App 已内置该 CA。NAS 上的 Docker 部署仍保留作为备份/自托管方案。
+
 ## 数据与规则说明
 
 - 数据源：中国体育彩票官方接口 `getHistoryPageListV1`，服务端抓取并附带浏览器 UA 与 Referer 以通过 WAF。

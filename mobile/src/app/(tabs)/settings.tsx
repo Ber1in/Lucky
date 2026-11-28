@@ -59,7 +59,7 @@ export default function SettingsScreen() {
           autoCorrect={false}
           keyboardType="url"
           onChangeText={setBaseUrl}
-          placeholder="http://192.168.5.14:18080"
+          placeholder="https://47.108.230.103:8443"
         />
         <PrimaryButton title="保存地址" onPress={save} />
         <Text style={styles.hint}>

@@ -6,7 +6,7 @@ type AuthState = {
   user: User | null;
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
-  register: (username: string, password: string) => Promise<void>;
+  register: (username: string, password: string, inviteCode?: string) => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -29,8 +29,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const registerMutation = useMutation({
-    mutationFn: ({ username, password }: { username: string; password: string }) =>
-      api.register(username, password),
+    mutationFn: ({
+      username,
+      password,
+      inviteCode,
+    }: {
+      username: string;
+      password: string;
+      inviteCode?: string;
+    }) => api.register(username, password, inviteCode),
     onSuccess: (user) => queryClient.setQueryData(["me"], user),
   });
 
@@ -49,8 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login: async (username, password) => {
         await loginMutation.mutateAsync({ username, password });
       },
-      register: async (username, password) => {
-        await registerMutation.mutateAsync({ username, password });
+      register: async (username, password, inviteCode) => {
+        await registerMutation.mutateAsync({ username, password, inviteCode });
       },
       logout: async () => {
         await logoutMutation.mutateAsync();

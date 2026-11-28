@@ -50,6 +50,33 @@ def test_login_success(client, register):
     assert response.json()["username"] == "alice"
 
 
+def test_registration_invite_code(client, monkeypatch):
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "registration_invite_code", "invite123")
+
+    missing = client.post(
+        "/api/auth/register", json={"username": "alice", "password": "password123"}
+    )
+    assert missing.status_code == 403
+
+    wrong = client.post(
+        "/api/auth/register",
+        json={"username": "alice", "password": "password123", "invite_code": "nope"},
+    )
+    assert wrong.status_code == 403
+
+    ok = client.post(
+        "/api/auth/register",
+        json={
+            "username": "alice",
+            "password": "password123",
+            "invite_code": "invite123",
+        },
+    )
+    assert ok.status_code == 201
+
+
 def test_username_case_insensitive(client, register):
     register("Alice")
 

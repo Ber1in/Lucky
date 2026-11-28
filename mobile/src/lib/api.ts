@@ -130,10 +130,13 @@ export const api = {
       { method: "POST", body: JSON.stringify({ username, password }) },
       { auth: false },
     ),
-  register: (username: string, password: string) =>
+  register: (username: string, password: string, inviteCode?: string) =>
     request<User>(
       "/auth/register",
-      { method: "POST", body: JSON.stringify({ username, password }) },
+      {
+        method: "POST",
+        body: JSON.stringify({ username, password, invite_code: inviteCode || null }),
+      },
       { auth: false },
     ),
   me: () => request<User>("/auth/me"),

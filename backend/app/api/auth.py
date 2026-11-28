@@ -63,6 +63,11 @@ def _authenticate(db: Session, request: Request, username: str, password: str) -
 def register(payload: RegisterIn, request: Request, response: Response, db: Session = Depends(get_db)):
     if not register_limiter.hit(f"register:{client_key(request)}"):
         raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="注册过于频繁")
+    if (
+        settings.registration_invite_code
+        and payload.invite_code != settings.registration_invite_code
+    ):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="邀请码错误")
     exists = (
         db.query(User)
         .filter(func.lower(User.username) == payload.username.lower())

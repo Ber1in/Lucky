@@ -8,6 +8,7 @@ export function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -24,7 +25,7 @@ export function Register() {
     }
     setBusy(true);
     try {
-      await register(username.trim(), password);
+      await register(username.trim(), password, inviteCode.trim());
       navigate("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "注册失败");
@@ -45,6 +46,15 @@ export function Register() {
               value={username}
               autoComplete="username"
               onChange={(event) => setUsername(event.target.value)}
+            />
+          </div>
+          <div>
+            <label className="label">邀请码</label>
+            <input
+              className="input"
+              value={inviteCode}
+              autoComplete="off"
+              onChange={(event) => setInviteCode(event.target.value)}
             />
           </div>
           <div>
