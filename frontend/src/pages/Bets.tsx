@@ -431,7 +431,13 @@ export function Bets() {
                   <div className="text-xs text-slate-400">{bet.draw_date ?? "待开奖"}</div>
                 </td>
                 <td className="px-4 py-3">
-                  <Balls front={bet.front_numbers} back={bet.back_numbers} size="sm" />
+                  <Balls
+                    front={bet.front_numbers}
+                    back={bet.back_numbers}
+                    size="sm"
+                    matchedFront={bet.draw_front_numbers ?? []}
+                    matchedBack={bet.draw_back_numbers ?? []}
+                  />
                   <div className="mt-1 text-xs text-slate-400">
                     {bet.is_additional ? "追加" : "基本"} · {bet.multiplier} 倍
                   </div>

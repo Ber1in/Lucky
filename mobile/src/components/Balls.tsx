@@ -8,24 +8,60 @@ export function Balls({
   front,
   back,
   small = false,
+  matchedFront = [],
+  matchedBack = [],
 }: {
   front: number[];
   back: number[];
   small?: boolean;
+  matchedFront?: number[];
+  matchedBack?: number[];
 }) {
+  const frontMatched = new Set(matchedFront);
+  const backMatched = new Set(matchedBack);
   return (
     <View style={styles.row}>
-      {front.map((number) => (
-        <View key={`f-${number}`} style={[styles.ball, styles.front, small && styles.small]}>
-          <Text style={[styles.ballText, small && styles.smallText]}>{pad(number)}</Text>
-        </View>
-      ))}
+      {front.map((number) => {
+        const matched = frontMatched.has(number);
+        return (
+          <View
+            key={`f-${number}`}
+            style={[
+              styles.ball,
+              styles.front,
+              small && styles.small,
+              matched && styles.matched,
+            ]}
+          >
+            <Text
+              style={[styles.ballText, small && styles.smallText, matched && styles.matchedText]}
+            >
+              {pad(number)}
+            </Text>
+          </View>
+        );
+      })}
       <Text style={styles.plus}>+</Text>
-      {back.map((number) => (
-        <View key={`b-${number}`} style={[styles.ball, styles.back, small && styles.small]}>
-          <Text style={[styles.ballText, small && styles.smallText]}>{pad(number)}</Text>
-        </View>
-      ))}
+      {back.map((number) => {
+        const matched = backMatched.has(number);
+        return (
+          <View
+            key={`b-${number}`}
+            style={[
+              styles.ball,
+              styles.back,
+              small && styles.small,
+              matched && styles.matched,
+            ]}
+          >
+            <Text
+              style={[styles.ballText, small && styles.smallText, matched && styles.matchedText]}
+            >
+              {pad(number)}
+            </Text>
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -54,6 +90,11 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
   },
+  matched: {
+    backgroundColor: "#fbbf24",
+    borderWidth: 2,
+    borderColor: "#f59e0b",
+  },
   ballText: {
     color: colors.white,
     fontSize: 13,
@@ -61,6 +102,9 @@ const styles = StyleSheet.create({
   },
   smallText: {
     fontSize: 11,
+  },
+  matchedText: {
+    color: "#78350f",
   },
   plus: {
     color: colors.muted,

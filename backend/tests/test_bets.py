@@ -168,6 +168,8 @@ def test_future_draw_pending(client, register):
     assert body["status"] == "pending"
     assert body["prize_amount"] == 0
     assert body["draw_date"] is None
+    assert body["draw_front_numbers"] is None
+    assert body["draw_back_numbers"] is None
 
 
 def test_summary(client, register, make_draw):
@@ -262,3 +264,5 @@ def test_pending_then_recalc(client, register, make_draw, db):
     item = client.get("/api/bets").json()["items"][0]
     assert item["status"] == "won"
     assert item["prize_level"] == "一等奖"
+    assert item["draw_front_numbers"] == [1, 2, 3, 4, 5]
+    assert item["draw_back_numbers"] == [1, 2]

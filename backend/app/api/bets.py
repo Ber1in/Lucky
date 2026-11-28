@@ -29,6 +29,8 @@ def _to_out(bet: Bet, db: Session) -> BetOut:
         prize_level=bet.prize_level,
         prize_amount=float(bet.prize_amount) if bet.prize_amount is not None else None,
         draw_date=draw.draw_date if draw else None,
+        draw_front_numbers=list(draw.front_numbers) if draw else None,
+        draw_back_numbers=list(draw.back_numbers) if draw else None,
     )
 
 

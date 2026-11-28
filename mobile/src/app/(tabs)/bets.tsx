@@ -346,7 +346,13 @@ export default function BetsScreen() {
                       ) : null}
                     </View>
                   </View>
-                  <Balls front={bet.front_numbers} back={bet.back_numbers} small />
+                  <Balls
+                    front={bet.front_numbers}
+                    back={bet.back_numbers}
+                    small
+                    matchedFront={bet.draw_front_numbers ?? []}
+                    matchedBack={bet.draw_back_numbers ?? []}
+                  />
                 </Card>
               </Pressable>
             );

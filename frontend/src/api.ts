@@ -41,6 +41,8 @@ export type Bet = {
   prize_level: string | null;
   prize_amount: number | null;
   draw_date: string | null;
+  draw_front_numbers: number[] | null;
+  draw_back_numbers: number[] | null;
 };
 
 export type BetList = { items: Bet[]; total: number; page: number; page_size: number };

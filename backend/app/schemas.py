@@ -151,6 +151,8 @@ class BetOut(BaseModel):
     prize_level: str | None
     prize_amount: float | None
     draw_date: date | None = None
+    draw_front_numbers: list[int] | None = None
+    draw_back_numbers: list[int] | None = None
 
     model_config = {"from_attributes": True}
 

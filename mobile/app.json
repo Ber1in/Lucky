@@ -3,7 +3,7 @@
     "name": "Lucky",
     "slug": "lucky",
     "scheme": "lucky",
-    "version": "1.2.3",
+    "version": "1.2.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -12,7 +12,7 @@
     },
     "android": {
       "package": "com.ber1in.lucky",
-      "versionCode": 6,
+      "versionCode": 7,
       "permissions": [
         "POST_NOTIFICATIONS"
       ],
