@@ -71,8 +71,9 @@ export function Bets() {
   const [additional, setAdditional] = useState(false);
   const [multiplier, setMultiplier] = useState(1);
   const [ticketAmount, setTicketAmount] = useState("");
-  const [editingId, setEditingId] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [managing, setManaging] = useState(false);
+  const [selected, setSelected] = useState<number[]>([]);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
@@ -90,10 +91,10 @@ export function Bets() {
   });
 
   useEffect(() => {
-    if (!drawNo && editingId === null && nextDraw.data?.draw_no) {
+    if (!drawNo && nextDraw.data?.draw_no) {
       setDrawNo(nextDraw.data.draw_no);
     }
-  }, [nextDraw.data, drawNo, editingId]);
+  }, [nextDraw.data, drawNo]);
 
   if (!user) {
     return (
@@ -145,13 +146,14 @@ export function Bets() {
     setAdditional(false);
     setMultiplier(1);
     setTicketAmount("");
-    setEditingId(null);
     setShowForm(false);
   };
 
   const openCreate = () => {
     resetForm();
     setShowForm(true);
+    setManaging(false);
+    setSelected([]);
   };
 
   const submit = async () => {
@@ -185,26 +187,15 @@ export function Bets() {
       return;
     }
     try {
-      if (editingId !== null) {
-        await api.updateBet(editingId, {
-          front_numbers: front,
-          back_numbers: back,
-          is_additional: additional,
-          multiplier,
-          ticket_amount: parsedTicketAmount,
-        });
-        setNotice("已更新");
-      } else {
-        await api.createBet({
-          draw_no: effectiveDrawNo || null,
-          front_numbers: front,
-          back_numbers: back,
-          is_additional: additional,
-          multiplier,
-          ticket_amount: parsedTicketAmount,
-        });
-        setNotice("已记录");
-      }
+      await api.createBet({
+        draw_no: effectiveDrawNo || null,
+        front_numbers: front,
+        back_numbers: back,
+        is_additional: additional,
+        multiplier,
+        ticket_amount: parsedTicketAmount,
+      });
+      setNotice("已记录");
       resetForm();
       queryClient.invalidateQueries({ queryKey: ["bets"] });
       queryClient.invalidateQueries({ queryKey: ["summary"] });
@@ -213,23 +204,22 @@ export function Bets() {
     }
   };
 
-  const startEdit = (bet: Bet) => {
-    setShowForm(true);
-    setEditingId(bet.id);
-    setDrawNo(bet.draw_no);
-    setFront([...bet.front_numbers]);
-    setBack([...bet.back_numbers]);
-    setAdditional(bet.is_additional);
-    setMultiplier(bet.multiplier);
-    setTicketAmount(bet.ticket_amount != null ? String(bet.ticket_amount) : "");
-    setError("");
-    setNotice("");
+  const toggleSelected = (id: number) => {
+    setSelected((previous) =>
+      previous.includes(id)
+        ? previous.filter((item) => item !== id)
+        : [...previous, id],
+    );
   };
 
-  const remove = async (bet: Bet) => {
-    if (!window.confirm(`删除第 ${bet.draw_no} 期的这条记录？`)) return;
+  const deleteSelected = async () => {
+    if (!selected.length) return;
+    if (!window.confirm(`删除选中的 ${selected.length} 条投注记录？`)) return;
+    setError("");
     try {
-      await api.deleteBet(bet.id);
+      await Promise.all(selected.map((id) => api.deleteBet(id)));
+      setSelected([]);
+      setManaging(false);
       queryClient.invalidateQueries({ queryKey: ["bets"] });
       queryClient.invalidateQueries({ queryKey: ["summary"] });
     } catch (err) {
@@ -239,13 +229,46 @@ export function Bets() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-lg font-semibold">我的投注</h1>
-        {!showForm && (
-          <button className="btn-primary" onClick={openCreate}>
-            记录投注
-          </button>
-        )}
+        <div className="flex gap-2">
+          {!showForm && !managing && (
+            <>
+              <button className="btn-primary" onClick={openCreate}>
+                记录投注
+              </button>
+              <button
+                className="btn-ghost"
+                onClick={() => {
+                  setManaging(true);
+                  setSelected([]);
+                }}
+              >
+                管理
+              </button>
+            </>
+          )}
+          {managing && (
+            <>
+              <button
+                className="btn-primary bg-red-600 hover:bg-red-700"
+                disabled={!selected.length}
+                onClick={deleteSelected}
+              >
+                删除选中（{selected.length}）
+              </button>
+              <button
+                className="btn-ghost"
+                onClick={() => {
+                  setManaging(false);
+                  setSelected([]);
+                }}
+              >
+                取消
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {summary.data && (
@@ -277,12 +300,12 @@ export function Bets() {
         </section>
       )}
 
-      {(showForm || editingId !== null) && (
+      {showForm && (
       <section className="card space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold">{editingId ? "修改投注" : "记录投注"}</h2>
+          <h2 className="text-base font-semibold">记录投注</h2>
           <button className="text-sm text-slate-500 hover:text-brand-600" onClick={resetForm}>
-            {editingId ? "取消修改" : "取消"}
+            取消
           </button>
         </div>
 
@@ -293,7 +316,6 @@ export function Bets() {
               <input
                 className="input"
                 value={drawNo}
-                disabled={editingId !== null}
                 placeholder="自动使用下一期"
                 onChange={(event) => setDrawNo(event.target.value.trim())}
               />
@@ -365,7 +387,7 @@ export function Bets() {
         {notice && <p className="text-sm text-emerald-600">{notice}</p>}
 
         <button className="btn-primary" onClick={submit}>
-          {editingId ? "保存修改" : "记录投注"}
+          记录投注
         </button>
         <p className="text-xs text-slate-400">
           仅支持 26014 期及以后；期号留空时自动使用下一期（尚未开奖），开奖后自动核算。
@@ -377,17 +399,31 @@ export function Bets() {
         <table className="min-w-full text-sm">
           <thead className="bg-slate-50 text-left text-slate-500">
             <tr>
+              {managing && <th className="px-4 py-3 font-medium">选择</th>}
               <th className="px-4 py-3 font-medium">期号</th>
               <th className="px-4 py-3 font-medium">号码</th>
               <th className="px-4 py-3 font-medium">投入</th>
               <th className="px-4 py-3 font-medium">结果</th>
               <th className="px-4 py-3 font-medium">奖金</th>
-              <th className="px-4 py-3 font-medium">操作</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {bets.data?.items.map((bet) => (
-              <tr key={bet.id} className="hover:bg-slate-50">
+              <tr
+                key={bet.id}
+                className={`hover:bg-slate-50 ${managing ? "cursor-pointer" : ""}`}
+                onClick={managing ? () => toggleSelected(bet.id) : undefined}
+              >
+                {managing && (
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selected.includes(bet.id)}
+                      onChange={() => toggleSelected(bet.id)}
+                      onClick={(event) => event.stopPropagation()}
+                    />
+                  </td>
+                )}
                 <td className="px-4 py-3">
                   <div className="font-medium">{bet.draw_no}</div>
                   <div className="text-xs text-slate-400">{bet.draw_date ?? "待开奖"}</div>
@@ -415,21 +451,11 @@ export function Bets() {
                 <td className="px-4 py-3">
                   {bet.status === "won" ? formatMoney(bet.prize_amount) : "—"}
                 </td>
-                <td className="px-4 py-3">
-                  <div className="flex gap-2 text-sm">
-                    <button className="text-brand-600 hover:underline" onClick={() => startEdit(bet)}>
-                      修改
-                    </button>
-                    <button className="text-red-500 hover:underline" onClick={() => remove(bet)}>
-                      删除
-                    </button>
-                  </div>
-                </td>
               </tr>
             ))}
             {!bets.data?.items.length && (
               <tr>
-                <td className="px-4 py-6 text-slate-500" colSpan={6}>
+                <td className="px-4 py-6 text-slate-500" colSpan={managing ? 6 : 5}>
                   还没有投注记录
                 </td>
               </tr>

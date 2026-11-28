@@ -77,7 +77,9 @@ export default function BetsScreen() {
   const [error, setError] = useState("");
 
   const [visible, setVisible] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [managing, setManaging] = useState(false);
+  const [selected, setSelected] = useState<number[]>([]);
+  const [deleting, setDeleting] = useState(false);
   const [drawNo, setDrawNo] = useState("");
   const [front, setFront] = useState<number[]>([]);
   const [back, setBack] = useState<number[]>([]);
@@ -114,7 +116,6 @@ export default function BetsScreen() {
   );
 
   const resetForm = () => {
-    setEditingId(null);
     setDrawNo("");
     setFront([]);
     setBack([]);
@@ -126,6 +127,8 @@ export default function BetsScreen() {
 
   const openCreate = async () => {
     resetForm();
+    setManaging(false);
+    setSelected([]);
     setVisible(true);
     try {
       const next = await api.nextDraw();
@@ -133,18 +136,6 @@ export default function BetsScreen() {
     } catch {
       // Leave it blank; the backend will use the next period.
     }
-  };
-
-  const openEdit = (bet: Bet) => {
-    setEditingId(bet.id);
-    setDrawNo(bet.draw_no);
-    setFront([...bet.front_numbers]);
-    setBack([...bet.back_numbers]);
-    setAdditional(bet.is_additional);
-    setMultiplier(String(bet.multiplier));
-    setTicketAmount(bet.ticket_amount == null ? "" : String(bet.ticket_amount));
-    setFormError("");
-    setVisible(true);
   };
 
   const toggleFront = (value: number) => {
@@ -189,30 +180,18 @@ export default function BetsScreen() {
 
     setSaving(true);
     try {
-      if (editingId !== null) {
-        await api.updateBet(editingId, {
-          front_numbers: front,
-          back_numbers: back,
-          is_additional: additional,
-          multiplier: multiplierValue,
-          ticket_amount: ticketValue,
-        });
-      } else {
-        await api.createBet({
-          draw_no: drawNo.trim() || null,
-          front_numbers: front,
-          back_numbers: back,
-          is_additional: additional,
-          multiplier: multiplierValue,
-          ticket_amount: ticketValue,
-        });
-      }
+      await api.createBet({
+        draw_no: drawNo.trim() || null,
+        front_numbers: front,
+        back_numbers: back,
+        is_additional: additional,
+        multiplier: multiplierValue,
+        ticket_amount: ticketValue,
+      });
       setVisible(false);
       resetForm();
-      await load(editingId === null ? 1 : page);
-      if (editingId === null) {
-        setPage(1);
-      }
+      await load(1);
+      setPage(1);
     } catch (err) {
       setFormError(err instanceof Error ? err.message : "保存失败");
     } finally {
@@ -220,19 +199,35 @@ export default function BetsScreen() {
     }
   };
 
-  const remove = (bet: Bet) => {
-    Alert.alert("删除记录", `删除第 ${bet.draw_no} 期的这条投注？`, [
+  const toggleSelected = (id: number) => {
+    setSelected((previous) =>
+      previous.includes(id)
+        ? previous.filter((item) => item !== id)
+        : [...previous, id],
+    );
+  };
+
+  const deleteSelected = () => {
+    if (!selected.length || deleting) return;
+    Alert.alert("删除记录", `删除选中的 ${selected.length} 条投注？`, [
       { text: "取消", style: "cancel" },
       {
         text: "删除",
         style: "destructive",
         onPress: async () => {
+          setDeleting(true);
           try {
-            await api.deleteBet(bet.id);
-            await load(1);
-            setPage(1);
+            await Promise.all(selected.map((id) => api.deleteBet(id)));
+            const remaining = Math.max(0, total - selected.length);
+            const targetPage = Math.min(page, Math.max(1, Math.ceil(remaining / PAGE_SIZE)));
+            setSelected([]);
+            setManaging(false);
+            await load(targetPage);
+            setPage(targetPage);
           } catch (err) {
             Alert.alert("删除失败", err instanceof Error ? err.message : "请稍后重试");
+          } finally {
+            setDeleting(false);
           }
         },
       },
@@ -243,9 +238,45 @@ export default function BetsScreen() {
     <View style={styles.screen}>
       <View style={styles.header}>
         <Text style={styles.title}>我的投注</Text>
-        <Pressable style={styles.addButton} onPress={openCreate}>
-          <Text style={styles.addButtonText}>+ 记录投注</Text>
-        </Pressable>
+        <View style={styles.headerActions}>
+          {managing ? (
+            <>
+              <Pressable
+                style={[styles.dangerButton, (!selected.length || deleting) && styles.disabled]}
+                disabled={!selected.length || deleting}
+                onPress={deleteSelected}
+              >
+                <Text style={styles.dangerButtonText}>
+                  {deleting ? "删除中…" : `删除选中（${selected.length}）`}
+                </Text>
+              </Pressable>
+              <Pressable
+                style={styles.manageButton}
+                onPress={() => {
+                  setManaging(false);
+                  setSelected([]);
+                }}
+              >
+                <Text style={styles.manageButtonText}>取消</Text>
+              </Pressable>
+            </>
+          ) : (
+            <>
+              <Pressable style={styles.addButton} onPress={openCreate}>
+                <Text style={styles.addButtonText}>+ 记录投注</Text>
+              </Pressable>
+              <Pressable
+                style={styles.manageButton}
+                onPress={() => {
+                  setManaging(true);
+                  setSelected([]);
+                }}
+              >
+                <Text style={styles.manageButtonText}>管理</Text>
+              </Pressable>
+            </>
+          )}
+        </View>
       </View>
 
       {summary ? (
@@ -266,46 +297,54 @@ export default function BetsScreen() {
         <ActivityIndicator color={colors.primary} style={{ marginTop: 20 }} />
       ) : (
         <ScrollView contentContainerStyle={styles.list}>
-          {items.map((bet) => (
-            <Card key={bet.id} style={styles.betCard}>
-              <View style={styles.rowBetween}>
-                <View>
-                  <Text style={styles.betDrawNo}>{bet.draw_no}</Text>
-                  <Text style={styles.muted}>{bet.draw_date ?? "待开奖"}</Text>
-                </View>
-                <Text
-                  style={[
-                    styles.status,
-                    bet.status === "won"
-                      ? styles.won
-                      : bet.status === "pending"
-                        ? styles.pending
-                        : styles.muted,
-                  ]}
-                >
-                  {statusLabel(bet.status, bet.prize_level)}
-                </Text>
-              </View>
-              <Balls front={bet.front_numbers} back={bet.back_numbers} small />
-              <View style={styles.rowBetween}>
-                <Text style={styles.muted}>
-                  {bet.is_additional ? "追加" : "基本"} · {bet.multiplier} 倍 · 投入{" "}
-                  {formatMoney(bet.cost)}
-                </Text>
-                <Text style={styles.muted}>
-                  {bet.status === "won" ? formatMoney(bet.prize_amount) : "—"}
-                </Text>
-              </View>
-              <View style={styles.actions}>
-                <Pressable onPress={() => openEdit(bet)}>
-                  <Text style={styles.link}>修改</Text>
-                </Pressable>
-                <Pressable onPress={() => remove(bet)}>
-                  <Text style={styles.deleteLink}>删除</Text>
-                </Pressable>
-              </View>
-            </Card>
-          ))}
+          {items.map((bet) => {
+            const isSelected = selected.includes(bet.id);
+            return (
+              <Pressable
+                key={bet.id}
+                disabled={!managing}
+                onPress={() => toggleSelected(bet.id)}
+              >
+                <Card style={[styles.betCard, isSelected && styles.betCardSelected]}>
+                  <View style={styles.rowBetween}>
+                    <View style={styles.drawRow}>
+                      {managing ? (
+                        <View style={[styles.checkbox, isSelected && styles.checkboxChecked]}>
+                          {isSelected ? <Text style={styles.checkboxMark}>✓</Text> : null}
+                        </View>
+                      ) : null}
+                      <View>
+                        <Text style={styles.betDrawNo}>{bet.draw_no}</Text>
+                        <Text style={styles.muted}>{bet.draw_date ?? "待开奖"}</Text>
+                      </View>
+                    </View>
+                    <Text
+                      style={[
+                        styles.status,
+                        bet.status === "won"
+                          ? styles.won
+                          : bet.status === "pending"
+                            ? styles.pending
+                            : styles.muted,
+                      ]}
+                    >
+                      {statusLabel(bet.status, bet.prize_level)}
+                    </Text>
+                  </View>
+                  <Balls front={bet.front_numbers} back={bet.back_numbers} small />
+                  <View style={styles.rowBetween}>
+                    <Text style={styles.muted}>
+                      {bet.is_additional ? "追加" : "基本"} · {bet.multiplier} 倍 · 投入{" "}
+                      {formatMoney(bet.cost)}
+                    </Text>
+                    <Text style={styles.muted}>
+                      {bet.status === "won" ? formatMoney(bet.prize_amount) : "—"}
+                    </Text>
+                  </View>
+                </Card>
+              </Pressable>
+            );
+          })}
           {items.length === 0 ? <Text style={styles.muted}>还没有投注记录</Text> : null}
         </ScrollView>
       )}
@@ -345,7 +384,7 @@ export default function BetsScreen() {
             behavior={Platform.OS === "ios" ? "padding" : undefined}
           >
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{editingId ? "修改投注" : "记录投注"}</Text>
+              <Text style={styles.modalTitle}>记录投注</Text>
               <Pressable onPress={() => setVisible(false)}>
                 <Text style={styles.link}>关闭</Text>
               </Pressable>
@@ -354,7 +393,6 @@ export default function BetsScreen() {
               <Input
                 label="期号（留空默认下一期）"
                 value={drawNo}
-                editable={editingId === null}
                 keyboardType="number-pad"
                 onChangeText={setDrawNo}
                 placeholder="自动使用下一期"
@@ -394,11 +432,7 @@ export default function BetsScreen() {
               <Text style={styles.muted}>
                 本注投入：¥{(additional ? 3 : 2) * (Number(multiplier) || 0)}
               </Text>
-              <PrimaryButton
-                title={editingId ? "保存修改" : "记录投注"}
-                onPress={save}
-                loading={saving}
-              />
+              <PrimaryButton title="记录投注" onPress={save} loading={saving} />
             </ScrollView>
           </KeyboardAvoidingView>
         </SafeAreaView>
@@ -442,6 +476,35 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: colors.text,
   },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  manageButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+  },
+  manageButtonText: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  dangerButton: {
+    backgroundColor: colors.danger,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+  },
+  dangerButtonText: {
+    color: colors.white,
+    fontSize: 13,
+    fontWeight: "600",
+  },
   addButton: {
     backgroundColor: colors.primary,
     paddingHorizontal: 12,
@@ -481,6 +544,34 @@ const styles = StyleSheet.create({
   betCard: {
     gap: 8,
   },
+  betCardSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primarySoft,
+  },
+  drawRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  checkboxChecked: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  checkboxMark: {
+    color: colors.white,
+    fontSize: 13,
+    fontWeight: "700",
+    lineHeight: 16,
+  },
   rowBetween: {
     flexDirection: "row",
     alignItems: "center",
@@ -505,16 +596,8 @@ const styles = StyleSheet.create({
   pending: {
     color: colors.amber,
   },
-  actions: {
-    flexDirection: "row",
-    gap: 16,
-  },
   link: {
     color: colors.primary,
-    fontSize: 14,
-  },
-  deleteLink: {
-    color: colors.danger,
     fontSize: 14,
   },
   error: {
