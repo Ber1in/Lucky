@@ -53,7 +53,7 @@ export default function Register() {
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <Text style={styles.title}>注册</Text>
-        <Text style={styles.subtitle}>用户名 3–32 位，密码至少 8 位</Text>
+        <Text style={styles.subtitle}>用户名 3–32 位（不区分大小写），密码至少 8 位</Text>
 
         <Card style={styles.card}>
           <Input

@@ -50,6 +50,26 @@ def test_login_success(client, register):
     assert response.json()["username"] == "alice"
 
 
+def test_username_case_insensitive(client, register):
+    register("Alice")
+
+    duplicate = client.post(
+        "/api/auth/register", json={"username": "alice", "password": "password123"}
+    )
+    assert duplicate.status_code == 409
+
+    client.post("/api/auth/logout")
+    login = client.post(
+        "/api/auth/login", json={"username": "ALICE", "password": "password123"}
+    )
+    assert login.status_code == 200
+
+    token = client.post(
+        "/api/auth/token", json={"username": "aLiCe", "password": "password123"}
+    )
+    assert token.status_code == 200
+
+
 def test_token_login_and_bearer_auth(client, register):
     register("alice")
     client.post("/api/auth/logout")

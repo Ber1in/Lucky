@@ -39,7 +39,7 @@ export function Register() {
         <h1 className="text-lg font-semibold">注册</h1>
         <form className="space-y-3" onSubmit={submit}>
           <div>
-            <label className="label">用户名（3–32 位字母、数字、下划线或短横线）</label>
+            <label className="label">用户名（3–32 位字母、数字、下划线或短横线，不区分大小写）</label>
             <input
               className="input"
               value={username}

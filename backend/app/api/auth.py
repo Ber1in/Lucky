@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from ..config import settings
@@ -37,7 +38,7 @@ def _set_session_cookie(response: Response, token: str) -> None:
 
 def _authenticate(db: Session, request: Request, username: str, password: str) -> User:
     ip = client_key(request)
-    limiter_key = f"login:{ip}:{username}"
+    limiter_key = f"login:{ip}:{username.lower()}"
     ip_key = f"login-ip:{ip}"
     if login_limiter.blocked(limiter_key) or login_ip_limiter.blocked(ip_key):
         raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="尝试过于频繁")
@@ -46,7 +47,7 @@ def _authenticate(db: Session, request: Request, username: str, password: str) -
         login_limiter.record(limiter_key)
         login_ip_limiter.record(ip_key)
 
-    user = db.query(User).filter(User.username == username).first()
+    user = db.query(User).filter(func.lower(User.username) == username.lower()).first()
     if user is None:
         verify_password(DUMMY_HASH, password)
         record_failure()
@@ -62,7 +63,11 @@ def _authenticate(db: Session, request: Request, username: str, password: str) -
 def register(payload: RegisterIn, request: Request, response: Response, db: Session = Depends(get_db)):
     if not register_limiter.hit(f"register:{client_key(request)}"):
         raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="注册过于频繁")
-    exists = db.query(User).filter(User.username == payload.username).first()
+    exists = (
+        db.query(User)
+        .filter(func.lower(User.username) == payload.username.lower())
+        .first()
+    )
     if exists is not None:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="用户名已被占用")
     user = User(username=payload.username, password_hash=hash_password(payload.password))

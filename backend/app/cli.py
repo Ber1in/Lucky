@@ -3,6 +3,8 @@ from __future__ import annotations
 import argparse
 import sys
 
+from sqlalchemy import func
+
 from .db import SessionLocal
 from .models import AuthSession, User
 from .security import hash_password
@@ -11,7 +13,7 @@ from .services.sync import backfill, sync_latest
 
 
 def reset_password(db, username: str, new_password: str) -> bool:
-    user = db.query(User).filter(User.username == username).first()
+    user = db.query(User).filter(func.lower(User.username) == username.lower()).first()
     if user is None:
         return False
     user.password_hash = hash_password(new_password)

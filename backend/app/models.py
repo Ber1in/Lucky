@@ -14,6 +14,7 @@ from sqlalchemy import (
     Numeric,
     SmallInteger,
     String,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -22,6 +23,9 @@ from .db import Base
 
 class User(Base):
     __tablename__ = "users"
+    __table_args__ = (
+        Index("uq_users_username_lower", text("lower(username)"), unique=True),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     username: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
