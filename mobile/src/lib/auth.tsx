@@ -9,7 +9,6 @@ import {
 } from "react";
 
 import { api, setUnauthorizedHandler, type User } from "./api";
-import { loadBaseUrl } from "./config";
 import { clearToken, getToken, setToken } from "./token";
 
 type AuthState = {
@@ -32,7 +31,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     (async () => {
       try {
-        await loadBaseUrl();
         const token = await getToken();
         if (token) {
           const me = await api.me();
