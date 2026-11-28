@@ -132,13 +132,13 @@ docker compose exec -T db psql -U "${POSTGRES_USER:-dlt}" -d "${POSTGRES_DB:-dlt
 
 当前线上环境是阿里云单机原生部署：
 
-- Nginx HTTPS `8443`（自签 CA），托管前端并把 `/api` 反代到 FastAPI
+- Nginx HTTPS `8443`（自签 CA），目前只把 `/api` 反代到 FastAPI 供 App 使用；网页版已暂停，访问根路径返回 404
 - FastAPI 与 worker 由 systemd 管理
 - PostgreSQL 16
 - 注册需要邀请码（服务端环境变量 `REGISTRATION_INVITE_CODE`）
-- App 默认连接 `https://47.108.230.103:8443`
+- App 固定连接 `https://47.108.230.103:8443`
 
-自签 CA 在 `/mnt/d/Downloads/lucky-ca.crt`。PC 把它安装到“受信任的根证书颁发机构”后浏览器不再警告；App 已内置该 CA。NAS 上的 Docker 部署仍保留作为备份/自托管方案。
+自签 CA 在 `/mnt/d/Downloads/lucky-ca.crt`，App 已内置。前端代码仍保留在 `frontend/`，需要恢复网页时在 Nginx 配置里加回 `root /opt/lucky/frontend/dist;` 和 SPA fallback，并重新部署 `frontend/dist` 即可。NAS 上的 Docker 部署仍保留作为备份/自托管方案。
 
 ## 数据与规则说明
 
@@ -151,4 +151,4 @@ docker compose exec -T db psql -U "${POSTGRES_USER:-dlt}" -d "${POSTGRES_DB:-dlt
 
 ## 安全说明
 
-当前按“单机 + IP 访问”部署，暂未启用 HTTPS。已采取 Argon2id 密码哈希、登录/注册限流、HttpOnly + SameSite Cookie、统一认证错误。开放注册环境下建议后续补域名与 TLS，再考虑邀请码或邮箱验证。
+当前按“单机 + IP 访问”部署，已启用自签 HTTPS（`8443`），注册需要邀请码。已采取 Argon2id 密码哈希、登录/注册限流、HttpOnly + SameSite Cookie、统一认证错误。
